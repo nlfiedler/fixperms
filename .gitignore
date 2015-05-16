@@ -1,0 +1,5 @@
+ebin
+deps
+*.beam
+.rebar
+fixperms

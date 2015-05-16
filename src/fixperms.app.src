@@ -1,0 +1,11 @@
+{application, fixperms, [
+    {description, "Fix Permissions"},
+    {vsn, "1.0"},
+    {registered, []},
+    {applications, [
+        kernel,
+        stdlib
+    ]},
+    {mod, {fixperms, []}},
+    {env, []}
+]}.
