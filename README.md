@@ -4,11 +4,15 @@ Set the permissions of files and directories to a specific mode (one for files a
 
 ## Building
 
+Requires [Erlang/OTP](http://www.erlang.org) R17 for building and running, and [rebar](https://github.com/rebar/rebar) for building.
+
 ```
 $ rebar get-deps
 $ rebar -r prepare-deps
 $ make
 ```
+
+The result will be a self-contained [escript](http://www.erlang.org/doc/man/escript.html) named `fixperms` that can be copied to a suitable location (e.g. `/usr/local/bin`) and invoked directly.
 
 ## Usage
 
