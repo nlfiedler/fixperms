@@ -68,7 +68,7 @@ walk_tree(Path, Excludes, DirPerm, FilePerm) ->
             false -> false
         end
     end,
-    Dirs = lists:filter(FilterDirs, Filenames),
+    Dirs = lists:filter(FilterDirs, Filepaths),
     [fix_perms(F, FilePerm, DirPerm) || F <- Files ++ Dirs],
     [walk_tree(F, Excludes, DirPerm, FilePerm) || F <- Dirs],
     ok.
