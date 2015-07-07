@@ -7,8 +7,6 @@ Set the permissions of files and directories to a specific mode (one for files a
 Requires [Erlang/OTP](http://www.erlang.org) R17 for building and running, and [rebar](https://github.com/rebar/rebar) for building.
 
 ```
-$ rebar get-deps
-$ rebar -r prepare-deps
 $ make
 ```
 
