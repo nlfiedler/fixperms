@@ -4,9 +4,10 @@ Set the permissions of files and directories to a specific mode (one for files a
 
 ## Building
 
-Requires [Erlang/OTP](http://www.erlang.org) R17 for building and running, and [rebar](https://github.com/rebar/rebar) for building.
+Requires [Erlang/OTP](http://www.erlang.org) R17 or R18 for building and running, and [rebar](https://github.com/rebar/rebar) for building.
 
 ```
+$ rebar prepare-deps
 $ make
 ```
 
