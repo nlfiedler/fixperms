@@ -1,9 +1,13 @@
-.PHONY: all clean compile
+.PHONY: deps precompile release
 
-all: compile
+deps:
+	rebar get-deps
+	rebar prepare-deps
 
-compile:
-	rebar compile escriptize
+precompile:
+	@(test -d deps || $(MAKE) deps)
 
-clean:
+release: precompile
 	rebar clean
+	rebar compile
+	rebar escriptize

@@ -1,14 +1,16 @@
 # Fix Permissions
 
-Set the permissions of files and directories to a specific mode (one for files and another for directories). This is especially useful as a cron job to fix permissions on a shared file system, such as one hosted by netatalk, which has a strange habit of using weird permissions.
+Set the permissions of files and directories to a specific mode (one for files and another for directories). This is especially useful as a cron job to fix permissions on a shared file system, such as one hosted by [netatalk](http://netatalk.sourceforge.net), which has a strange habit of using weird permissions.
 
 ## Building
 
-Requires [Erlang/OTP](http://www.erlang.org) R17 or R18 for building and running, and [rebar](https://github.com/rebar/rebar) for building.
+### Prerequisites
+
+* [Erlang/OTP](http://www.erlang.org) R17|R18
+* [rebar](https://github.com/rebar/rebar)
 
 ```
-$ rebar prepare-deps
-$ make
+$ make release
 ```
 
 The result will be a self-contained [escript](http://www.erlang.org/doc/man/escript.html) named `fixperms` that can be copied to a suitable location (e.g. `/usr/local/bin`) and invoked directly.
