@@ -11,6 +11,7 @@
 
 main(Args) ->
     OptSpecList = [
+        {help,    $h, "help",    boolean,         "display usage"},
         {file,    $f, "file",    {string, "644"}, "permissions for files"},
         {dir,     $d, "dir",     {string, "755"}, "permissions for directories"},
         {exclude, $x, "exclude", {string, ""},    "entries to ignore, comma separated"},
@@ -18,12 +19,17 @@ main(Args) ->
     ],
     case getopt:parse(OptSpecList, Args) of
         {ok, {Options, _NonOptArgs}} ->
-            ValidOpts = validate_args(Options),
-            FilePerm = proplists:get_value(file, ValidOpts),
-            DirPerm = proplists:get_value(dir, ValidOpts),
-            Excludes = proplists:get_value(exclude, ValidOpts),
-            Path = proplists:get_value(path, ValidOpts),
-            walk_tree(Path, Excludes, DirPerm, FilePerm);
+            case proplists:get_bool(help, Options) of
+                true ->
+                    getopt:usage(OptSpecList, "fixperms");
+                false ->
+                    ValidOpts = validate_args(Options),
+                    FilePerm = proplists:get_value(file, ValidOpts),
+                    DirPerm = proplists:get_value(dir, ValidOpts),
+                    Excludes = proplists:get_value(exclude, ValidOpts),
+                    Path = proplists:get_value(path, ValidOpts),
+                    walk_tree(Path, Excludes, DirPerm, FilePerm)
+            end;
         {error, {Reason, Data}} ->
             io:format("Error: ~s ~p~n~n", [Reason, Data]),
             getopt:usage(OptSpecList, "fixperms")
