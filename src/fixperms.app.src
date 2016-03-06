@@ -1,6 +1,6 @@
 {application, fixperms, [
-    {description, "Fix Permissions"},
-    {vsn, "1.0"},
+    {description, "Fix file and directory permissions"},
+    {vsn, "1.1.0"},
     {registered, []},
     {applications, [
         kernel,

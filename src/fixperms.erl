@@ -30,74 +30,86 @@
 main(Args) ->
     OptSpecList = [
         {help,    $h, "help",    boolean,         "display usage"},
+        {version, $v, "version", boolean,         "display version information"},
         {file,    $f, "file",    {string, "644"}, "permissions for files"},
         {dir,     $d, "dir",     {string, "755"}, "permissions for directories"},
-        {exclude, $x, "exclude", {string, ""},    "entries to ignore, comma separated"},
-        {path,    $p, "path",    {string, "."},   "path to process"}
+        {exclude, $x, "exclude", {string, ""},    "entries to ignore, comma separated"}
     ],
     case getopt:parse(OptSpecList, Args) of
-        {ok, {Options, _NonOptArgs}} ->
-            case proplists:get_bool(help, Options) of
-                true ->
-                    getopt:usage(OptSpecList, "fixperms");
-                false ->
-                    ValidOpts = validate_args(Options),
-                    FilePerm = proplists:get_value(file, ValidOpts),
-                    DirPerm = proplists:get_value(dir, ValidOpts),
-                    Excludes = proplists:get_value(exclude, ValidOpts),
-                    Path = proplists:get_value(path, ValidOpts),
-                    walk_tree(Path, Excludes, DirPerm, FilePerm)
-            end;
+        {ok, {Options, NonOptArgs}} ->
+            maybe_help(proplists:get_bool(help, Options), OptSpecList, Options, NonOptArgs);
         {error, {Reason, Data}} ->
             io:format("Error: ~s ~p~n~n", [Reason, Data]),
             getopt:usage(OptSpecList, "fixperms")
     end,
     ok.
 
-% Ensure the parsed command line arguments are valid, return
-% a proplist with validated values.
+% Handle the --help optional command-line flag.
+maybe_help(true, OptSpecList, _Options, _NonOptArgs) ->
+    getopt:usage(OptSpecList, "fixperms <path> ...");
+maybe_help(false, OptSpecList, Options, NonOptArgs) ->
+    maybe_version(proplists:get_bool(version, Options), OptSpecList, Options, NonOptArgs).
+
+% Handle the --version optional command-line flag.
+maybe_version(true, _OptSpecList, _Options, _NonOptArgs) ->
+    ok = application:load(fixperms),
+    {ok, Keys} = application:get_all_key(fixperms),
+    Version = proplists:get_value(vsn, Keys),
+    io:format("fixperms version ~p~n", [Version]);
+maybe_version(false, _OptSpecList, Options, NonOptArgs) ->
+    % Do the real work of this script.
+    case length(NonOptArgs) of
+        0 ->
+            io:format("Missing required path(s), see help.~n");
+        _ ->
+            ValidOpts = validate_args(Options),
+            FilePerm = proplists:get_value(file, ValidOpts),
+            DirPerm = proplists:get_value(dir, ValidOpts),
+            Excludes = proplists:get_value(exclude, ValidOpts),
+            ProcessPath = fun(Path) ->
+                case filelib:is_dir(Path) of
+                    true  ->
+                        walk_tree(Path, Excludes, DirPerm, FilePerm);
+                    false ->
+                        io:format("Path does not exist: ~s~n", [Path])
+                end
+            end,
+            lists:foreach(ProcessPath, NonOptArgs)
+    end.
+
+% Ensure the parsed command line arguments are valid, return a proplist
+% with validated values.
 validate_args(Options) ->
     FilePermStr = proplists:get_value(file, Options),
     FilePerm = (catch list_to_integer(FilePermStr, 8)),
     if not is_integer(FilePerm); FilePerm > 511; FilePerm < 256 ->
             io:format("Invalid file permissions: ~s~n", [FilePermStr]),
-            exit(badarg);
+            erlang:halt();
         true -> ok
     end,
     DirPermStr = proplists:get_value(dir, Options),
     DirPerm = (catch list_to_integer(DirPermStr, 8)),
     if not is_integer(DirPerm); DirPerm > 511; DirPerm < 256 ->
             io:format("Invalid directory permissions: ~s~n", [DirPermStr]),
-            exit(badarg);
+            erlang:halt();
         true -> ok
     end,
     ExcludeStr = proplists:get_value(exclude, Options),
     Excludes = re:split(ExcludeStr, ",", [{return, list}]),
-    Path = proplists:get_value(path, Options),
-    case filelib:is_dir(Path) of
-        true  -> ok;
-        false ->
-            io:format("Path does not exist: ~s~n", [Path]),
-            exit(badarg)
-    end,
-    [{file, FilePerm}, {dir, DirPerm}, {exclude, Excludes}, {path, Path}].
+    [{file, FilePerm}, {dir, DirPerm}, {exclude, Excludes}].
 
+% Walk the given directory tree, looking for entires to correct.
 walk_tree(Path, Excludes, DirPerm, FilePerm) ->
     {ok, Filenames} = file:list_dir(Path),
-    Filepaths = [filename:join(Path, F) || F <- Filenames],
+    Included = lists:filter(fun(F) -> not lists:member(F, Excludes) end, Filenames),
+    Filepaths = [filename:join(Path, F) || F <- Included],
     Files = lists:filter(fun filelib:is_regular/1, Filepaths),
-    FilterDirs = fun(F) ->
-        case filelib:is_dir(F) of
-            true -> not lists:member(F, Excludes);
-            false -> false
-        end
-    end,
-    Dirs = lists:filter(FilterDirs, Filepaths),
-    [fix_perms(F, FilePerm, DirPerm) || F <- Files ++ Dirs],
-    [walk_tree(F, Excludes, DirPerm, FilePerm) || F <- Dirs],
-    ok.
+    Dirs = lists:filter(fun filelib:is_dir/1, Filepaths),
+    lists:foreach(fun (F) -> fix_perms(F, DirPerm, FilePerm) end, Files ++ Dirs),
+    lists:foreach(fun (D) -> walk_tree(D, Excludes, DirPerm, FilePerm) end, Dirs).
 
-fix_perms(F, FilePerm, DirPerm) ->
+% Change the permissions on the given file or directory.
+fix_perms(F, DirPerm, FilePerm) ->
     case file:read_file_info(F) of
         {ok, #file_info{type=directory, mode=Mode}} ->
             if Mode =/= DirPerm -> file:change_mode(F, DirPerm);

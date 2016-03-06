@@ -3,3 +3,4 @@ deps
 *.beam
 .rebar
 fixperms
+logs
