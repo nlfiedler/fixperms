@@ -37,27 +37,27 @@ all() ->
 
 % Test the path arguments validation logic.
 path_validation_test(_Config) ->
-    Cwd = os:getenv("PWD"),
-    MissingPaths = lists:flatten(io_lib:format("~s/fixperms", [Cwd])),
+    BinDir = os:getenv("PWD") ++ "/_build/default/bin/",
+    MissingPaths = lists:flatten(io_lib:format("~s/fixperms", [BinDir])),
     ?assertCmdOutput("Missing required path(s), see help.\n", MissingPaths),
-    WrongPath = lists:flatten(io_lib:format("~s/fixperms foobar", [Cwd])),
+    WrongPath = lists:flatten(io_lib:format("~s/fixperms foobar", [BinDir])),
     ?assertCmdOutput("Path does not exist: foobar\n", WrongPath),
     ok.
 
 % Test the permissions validation logic.
 perms_validation_test(_Config) ->
-    Cwd = os:getenv("PWD"),
-    BadFilePerms1 = lists:flatten(io_lib:format("~s/fixperms --file a foobar", [Cwd])),
+    BinDir = os:getenv("PWD") ++ "/_build/default/bin/",
+    BadFilePerms1 = lists:flatten(io_lib:format("~s/fixperms --file a foobar", [BinDir])),
     ?assertCmdOutput("Invalid file permissions: a\n", BadFilePerms1),
-    BadFilePerms2 = lists:flatten(io_lib:format("~s/fixperms --file 111 foobar", [Cwd])),
+    BadFilePerms2 = lists:flatten(io_lib:format("~s/fixperms --file 111 foobar", [BinDir])),
     ?assertCmdOutput("Invalid file permissions: 111\n", BadFilePerms2),
-    BadFilePerms3 = lists:flatten(io_lib:format("~s/fixperms --file 888 foobar", [Cwd])),
+    BadFilePerms3 = lists:flatten(io_lib:format("~s/fixperms --file 888 foobar", [BinDir])),
     ?assertCmdOutput("Invalid file permissions: 888\n", BadFilePerms3),
-    BadDirPerms1 = lists:flatten(io_lib:format("~s/fixperms --dir a foobar", [Cwd])),
+    BadDirPerms1 = lists:flatten(io_lib:format("~s/fixperms --dir a foobar", [BinDir])),
     ?assertCmdOutput("Invalid directory permissions: a\n", BadDirPerms1),
-    BadDirPerms2 = lists:flatten(io_lib:format("~s/fixperms --dir 111 foobar", [Cwd])),
+    BadDirPerms2 = lists:flatten(io_lib:format("~s/fixperms --dir 111 foobar", [BinDir])),
     ?assertCmdOutput("Invalid directory permissions: 111\n", BadDirPerms2),
-    BadDirPerms3 = lists:flatten(io_lib:format("~s/fixperms --dir 888 foobar", [Cwd])),
+    BadDirPerms3 = lists:flatten(io_lib:format("~s/fixperms --dir 888 foobar", [BinDir])),
     ?assertCmdOutput("Invalid directory permissions: 888\n", BadDirPerms3),
     ok.
 
@@ -82,8 +82,8 @@ fixperms_test(Config) ->
     file:change_mode(filename:join([PrivDir, "notouch", "n2"]), 8#640),
     file:change_mode(filename:join([PrivDir, "notouch", "n3"]), 8#750),
     % fix the permissions
-    Cwd = os:getenv("PWD"),
-    FixCmd = lists:flatten(io_lib:format("~s/fixperms --exclude notouch ~s", [Cwd, PrivDir])),
+    BinDir = os:getenv("PWD") ++ "/_build/default/bin/",
+    FixCmd = lists:flatten(io_lib:format("~s/fixperms --exclude notouch ~s", [BinDir, PrivDir])),
     ?assertCmd(FixCmd),
     % verify the permissions have been fixed
     {ok, FooInfo} = file:read_file_info(filename:join(PrivDir, "foo")),

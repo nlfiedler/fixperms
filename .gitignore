@@ -1,6 +1,6 @@
-ebin
-deps
 *.beam
-.rebar
+_build
+erl_crash.dump
 fixperms
 logs
+rebar.lock
