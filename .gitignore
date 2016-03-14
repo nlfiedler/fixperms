@@ -1,6 +1,4 @@
 *.beam
 _build
 erl_crash.dump
-fixperms
-logs
 rebar.lock
