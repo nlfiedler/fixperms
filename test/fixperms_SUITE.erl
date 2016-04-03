@@ -31,7 +31,8 @@ all() ->
     [
         path_validation_test,
         perms_validation_test,
-        fixperms_test
+        fixperms_test,
+        fixperms_nondefault_perms_test
     ].
 
 
@@ -123,6 +124,35 @@ fixperms_test(Config) ->
     {ok, N3Info} = file:read_file_info(filename:join([PrivDir, "notouch", "n3"])),
     ?assertEqual(regular, N3Info#file_info.type),
     ?assertEqual(8#100750, N3Info#file_info.mode),
+    ok.
+
+% Test the permissions fixing logic using non-default permissions.
+fixperms_nondefault_perms_test(Config) ->
+    PrivDir = ?config(priv_dir, Config),
+    % make several directories with some files in each
+    mkdir(PrivDir, "fubar", ["a1", "a2", "a3"]),
+    % set their permissions to be in need of change
+    file:change_mode(filename:join(PrivDir, "fubar"), 8#700),
+    file:change_mode(filename:join([PrivDir, "fubar", "a1"]), 8#600),
+    file:change_mode(filename:join([PrivDir, "fubar", "a2"]), 8#640),
+    file:change_mode(filename:join([PrivDir, "fubar", "a3"]), 8#750),
+    % fix the permissions
+    BinDir = os:getenv("PWD") ++ "/_build/default/bin/",
+    FixCmd = lists:flatten(io_lib:format("~s/fixperms -f 664 -d 775 ~s", [BinDir, PrivDir])),
+    ?assertCmd(FixCmd),
+    % verify the permissions have been fixed
+    {ok, FooInfo} = file:read_file_info(filename:join(PrivDir, "fubar")),
+    ?assertEqual(directory, FooInfo#file_info.type),
+    ?assertEqual(8#40775, FooInfo#file_info.mode),
+    {ok, A1Info} = file:read_file_info(filename:join([PrivDir, "fubar", "a1"])),
+    ?assertEqual(regular, A1Info#file_info.type),
+    ?assertEqual(8#100664, A1Info#file_info.mode),
+    {ok, A2Info} = file:read_file_info(filename:join([PrivDir, "fubar", "a2"])),
+    ?assertEqual(regular, A2Info#file_info.type),
+    ?assertEqual(8#100664, A2Info#file_info.mode),
+    {ok, A3Info} = file:read_file_info(filename:join([PrivDir, "fubar", "a3"])),
+    ?assertEqual(regular, A3Info#file_info.type),
+    ?assertEqual(8#100664, A3Info#file_info.mode),
     ok.
 
 % Make a directory and a set of files, all within the base directory.
