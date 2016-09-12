@@ -14,15 +14,15 @@ Set the permissions of files and directories to a specific mode (one for files a
 To build and test the application:
 
 ```
-$ rebar3 test
+$ rebar3 ct
 ```
 
 ### Releasing
 
-To produce a self-contained [escript](http://www.erlang.org/doc/man/escript.html), use the `release` make target, like so.
+To produce a self-contained [escript](http://www.erlang.org/doc/man/escript.html), use rebar.
 
 ```
-$ rebar3 build
+$ rebar3 escriptize
 ```
 
 The result (named `fixperms`) can be copied to a suitable location (e.g. `/usr/local/bin`) and invoked directly.

@@ -38,7 +38,7 @@ all() ->
 
 % Test the path arguments validation logic.
 path_validation_test(_Config) ->
-    BinDir = os:getenv("PWD") ++ "/_build/default/bin/",
+    BinDir = os:getenv("PWD") ++ "/_build/test/bin/",
     MissingPaths = lists:flatten(io_lib:format("~s/fixperms", [BinDir])),
     ?assertCmdOutput("Missing required path(s), see help.\n", MissingPaths),
     WrongPath = lists:flatten(io_lib:format("~s/fixperms foobar", [BinDir])),
@@ -47,7 +47,7 @@ path_validation_test(_Config) ->
 
 % Test the permissions validation logic.
 perms_validation_test(_Config) ->
-    BinDir = os:getenv("PWD") ++ "/_build/default/bin/",
+    BinDir = os:getenv("PWD") ++ "/_build/test/bin/",
     BadFilePerms1 = lists:flatten(io_lib:format("~s/fixperms --file a foobar", [BinDir])),
     ?assertCmdOutput("Invalid file permissions: a\n", BadFilePerms1),
     BadFilePerms2 = lists:flatten(io_lib:format("~s/fixperms --file 111 foobar", [BinDir])),
@@ -83,7 +83,7 @@ fixperms_test(Config) ->
     file:change_mode(filename:join([PrivDir, "notouch", "n2"]), 8#640),
     file:change_mode(filename:join([PrivDir, "notouch", "n3"]), 8#750),
     % fix the permissions
-    BinDir = os:getenv("PWD") ++ "/_build/default/bin/",
+    BinDir = os:getenv("PWD") ++ "/_build/test/bin/",
     FixCmd = lists:flatten(io_lib:format("~s/fixperms --exclude notouch ~s", [BinDir, PrivDir])),
     ?assertCmd(FixCmd),
     % verify the permissions have been fixed
@@ -137,7 +137,7 @@ fixperms_nondefault_perms_test(Config) ->
     file:change_mode(filename:join([PrivDir, "fubar", "a2"]), 8#640),
     file:change_mode(filename:join([PrivDir, "fubar", "a3"]), 8#750),
     % fix the permissions
-    BinDir = os:getenv("PWD") ++ "/_build/default/bin/",
+    BinDir = os:getenv("PWD") ++ "/_build/test/bin/",
     FixCmd = lists:flatten(io_lib:format("~s/fixperms -f 664 -d 775 ~s", [BinDir, PrivDir])),
     ?assertCmd(FixCmd),
     % verify the permissions have been fixed
